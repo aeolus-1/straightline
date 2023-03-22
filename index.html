@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lines</title>
+</head>
+<body>
+    <canvas style="position: absolute;z-index: -10;"id="c"></canvas>
+    <span id="yay" style="position: absolute;z-index: 10;"></span>
+    <script>
+        window.onload = ()=>{
+            var canvas = document.getElementById("c")
+            canvas.width = window.innerWidth
+            canvas.height = window.innerHeight
+            window.onresize = ()=>{
+                canvas.width = window.innerWidth
+            canvas.height = window.innerHeight
+            }
+            
+            var linePoints = [],
+                mouse = {
+                    pos:{x:0,y:0},
+                    down:false,
+                }
+            document.addEventListener("mousemove", (e)=>{
+                mouse.pos = {x:e.offsetX,y:e.offsetY}
+                if (mouse.down) {
+                var prePoint = linePoints[linePoints.length-1]||{x:Infinity,y:Infinity,}
+                    dst = Math.sqrt(Math.pow(prePoint.x-mouse.pos.x,2)+Math.pow(prePoint.y-mouse.pos.y,2))
+                
+                if (dst > 2) {
+                    linePoints.push({...mouse.pos})
+                }
+            }
+            })
+            document.addEventListener("mousedown", ()=>{mouse.down = true})
+            document.addEventListener("mouseup", ()=>{mouse.down = false;
+                var score = measureLine(linePoints)
+                if (score!=undefined){
+                    console.log(score)
+                    document.getElementById("yay").textContent = `${score/10}% a straight line`
+                    lineScore.push(score)
+                    //console.log(getAverage())
+                }
+                linePoints=[];})
+            var ctx = canvas.getContext("2d")
+            function getAverage() {
+                var aS = 0
+                for (let i = 0; i < lineScore.length; i++) {
+                    const s = lineScore[i];
+                    aS+=s/lineScore.length
+                }
+                return Math.round(aS)
+
+            }
+            function angleDifference( angle1, angle2 )
+                {	
+                    angle1 = angle1//*(Math.PI/180)
+                    angle2 = angle2//*(Math.PI/180)
+                    
+                    var diff = ( angle2 - angle1 + Math.PI ) % (Math.PI*2) - Math.PI;
+                    return (diff < -Math.PI ? diff + (Math.PI*2) : diff)/(Math.PI/180)
+                }
+            function measureLine(points) {
+                var angles = [],
+                    step = 3
+                for (let i = 0; i < points.length-step; i+=step) {
+                    var p = points[i],
+                        p2 = points[i+step],
+
+                        angle = Math.atan2(p.x-p2.x,p.y-p2.y)
+                    angles.push(angle)
+                }
+                angles=angles.sort()
+                var maxRange = Math.abs(angles[0]-angles[angles.length-1])/(Math.PI*2),
+                    score = Math.max(Math.round((1-(maxRange*2))*1000), 0)
+                document.getElementById("yay").textContent = points.length>20?angles.length>1?"":"Too Short":"Too Fast/Short"
+                return (points.length>20&&angles.length>1)?score:undefined
+
+            }
+            var lineScore = []
+            function renderLoop() {
+                canvas.width = canvas.width
+
+                if (linePoints.length>0) { 
+                    ctx.beginPath()
+                    ctx.moveTo(linePoints[0].x,linePoints[0].y)
+                    for (let i = 1; i < linePoints.length; i++) {
+                        const p = linePoints[i];
+                        ctx.lineTo(linePoints[i].x,linePoints[i].y)
+                    }
+                    ctx.stroke()
+                    ctx.closePath()
+                }
+
+
+                requestAnimationFrame(renderLoop)
+            }
+            renderLoop()
+        }
+    </script>
+</body>
+</html>
